@@ -80,9 +80,9 @@ def load_vip_data():
         return json.load(f)
 
 def save_vip_data(vip_ids):
-    data = {"vips": vip_ids}
+    data = vip_ids
     with open(DATA_DIR, 'w') as f:
-        json.dump(f, data, indent=4)
+        json.dump(data, f, indent=4)
 
 def get_vip_data():
     return load_vip_data()
