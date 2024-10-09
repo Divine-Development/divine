@@ -659,12 +659,11 @@ async def reload(ctx, option: str):
             load_guild_settings(guild_id)  # Load settings (this is just for demonstration)
             await message.edit(content=f"Reloading guild settings... {index + 1}/{total_guilds}")
             await asyncio.sleep(1)  # Adding a delay to show progress
-        
         await message.edit(content="All guild settings reloaded.")
     elif option.lower() == "vips":
         global vips
-        vip_data = load_staff_data()
-        vip_data = vips.get("vips", [])
+        data = load_staff_data()
+        vip_data = data.get("vips", [])
         await ctx.send(f"Staff list has been force-updated. Current staff: {len(vip_data)} members.")
     else:
         await ctx.send("Invalid option. Use '!reload staff', '!reload guilds' or '!reload vips'.")
