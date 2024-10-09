@@ -218,7 +218,7 @@ async def on_ready():
         await interaction.response.send_modal(modal)
 
     async def close_button_callback(interaction: discord.Interaction):
-        if interaction.user.id != bot.owner_id:
+        if interaction.user.id != 898255050592366642:
             await interaction.response.send_message("Only the bot owner can close appeals.", ephemeral=True)
             return
 
