@@ -546,56 +546,38 @@ def is_vip(user_id):
 # Command to add a VIP member (Bot owner only)
 @bot.command(description="Add a VIP member to the Database. (Owner only)")
 @commands.is_owner()
-async def addvip(ctx, user: str):
+async def addvip(ctx, user: discord.User = None):
+    if user is None:
+        await ctx.send("Please provide a user to add as VIP.")
+        return
+
     vip_data = load_vip_data()
 
-    # Determine if the input is a user ID or a username
-    if user.isdigit():  # If input is a number, treat it as a user ID
-        user_id = int(user)
-        user_obj = ctx.guild.get_member(user_id)
-        if user_obj is None:
-            await ctx.send("User not found in this guild.")
-            return
-    else:  # Otherwise, treat it as a username
-        user_obj = discord.utils.get(ctx.guild.members, name=user)
-        if user_obj is None:
-            await ctx.send("User not found in this guild.")
-            return
-
-    if user_obj.id not in vip_data.get('vips', []):
+    if user.id not in vip_data.get('vips', []):
         if 'vips' not in vip_data:
             vip_data['vips'] = []
-        vip_data['vips'].append(user_obj.id)
+        vip_data['vips'].append(user.id)
         save_vip_data(vip_data)
-        await ctx.send(f"Added {user_obj.name} to the VIP list.")
+        await ctx.send(f"Added {user.name} to the VIP list.")
     else:
-        await ctx.send(f"{user_obj.name} is already a VIP member.")
+        await ctx.send(f"{user.name} is already a VIP member.")
 
 # Command to remove a VIP member (Bot owner only)
 @bot.command(description="Remove a VIP member from the Database. (Owner only)")
 @commands.is_owner()
-async def removevip(ctx, user: str):
+async def removevip(ctx, user: discord.User = None):
+    if user is None:
+        await ctx.send("Please provide a user to remove from VIP.")
+        return
+
     vip_data = load_vip_data()
 
-    # Determine if the input is a user ID or a username
-    if user.isdigit():  # If input is a number, treat it as a user ID
-        user_id = int(user)
-        user_obj = ctx.guild.get_member(user_id)
-        if user_obj is None:
-            await ctx.send("User not found in this guild.")
-            return
-    else:  # Otherwise, treat it as a username
-        user_obj = discord.utils.get(ctx.guild.members, name=user)
-        if user_obj is None:
-            await ctx.send("User not found in this guild.")
-            return
-
-    if user_obj.id in vip_data.get('vips', []):
-        vip_data['vips'].remove(user_obj.id)
+    if user.id in vip_data.get('vips', []):
+        vip_data['vips'].remove(user.id)
         save_vip_data(vip_data)
-        await ctx.send(f"Removed {user_obj.name} from the VIP list.")
+        await ctx.send(f"Removed {user.name} from the VIP list.")
     else:
-        await ctx.send(f"{user_obj.name} is not a VIP member.")
+        await ctx.send(f"{user.name} is not a VIP member.")
 
 # Function to check if a user is a staff member
 def is_staff(user_id):
@@ -604,54 +586,36 @@ def is_staff(user_id):
 # Command to add a staff member (Bot owner only)
 @bot.command(description="Add a staff member to the Database. (Owner only)")
 @commands.is_owner()
-async def addstaff(ctx, user: str):
+async def addstaff(ctx, user: discord.User = None):
+    if user is None:
+        await ctx.send("Please provide a user to add as staff.")
+        return
+
     staff_data = load_staff_data()
 
-    # Determine if the input is a user ID or a username
-    if user.isdigit():  # If input is a number, treat it as a user ID
-        user_id = int(user)
-        user_obj = ctx.guild.get_member(user_id)
-        if user_obj is None:
-            await ctx.send("User not found in this guild.")
-            return
-    else:  # Otherwise, treat it as a username
-        user_obj = discord.utils.get(ctx.guild.members, name=user)
-        if user_obj is None:
-            await ctx.send("User not found in this guild.")
-            return
-
-    if user_obj.id not in staff_data['staff']:
-        staff_data['staff'].append(user_obj.id)
+    if user.id not in staff_data['staff']:
+        staff_data['staff'].append(user.id)
         save_staff_data(staff_data)
-        await ctx.send(f"Added {user_obj.name} to the staff list.")
+        await ctx.send(f"Added {user.name} to the staff list.")
     else:
-        await ctx.send(f"{user_obj.name} is already a staff member.")
+        await ctx.send(f"{user.name} is already a staff member.")
 
 # Command to remove a staff member (Bot owner only)
 @bot.command(description="Remove a staff member from the Database. (Owner only)")
 @commands.is_owner()
-async def removestaff(ctx, user: str):
+async def removestaff(ctx, user: discord.User = None):
+    if user is None:
+        await ctx.send("Please provide a user to remove from staff.")
+        return
+
     staff_data = load_staff_data()
 
-    # Determine if the input is a user ID or a username
-    if user.isdigit():  # If input is a number, treat it as a user ID
-        user_id = int(user)
-        user_obj = ctx.guild.get_member(user_id)
-        if user_obj is None:
-            await ctx.send("User not found in this guild.")
-            return
-    else:  # Otherwise, treat it as a username
-        user_obj = discord.utils.get(ctx.guild.members, name=user)
-        if user_obj is None:
-            await ctx.send("User not found in this guild.")
-            return
-
-    if user_obj.id in staff_data['staff']:
-        staff_data['staff'].remove(user_obj.id)
+    if user.id in staff_data['staff']:
+        staff_data['staff'].remove(user.id)
         save_staff_data(staff_data)
-        await ctx.send(f"Removed {user_obj.name} from the staff list.")
+        await ctx.send(f"Removed {user.name} from the staff list.")
     else:
-        await ctx.send(f"{user_obj.name} is not a staff member.")
+        await ctx.send(f"{user.name} is not a staff member.")
 
 @bot.command(description="Check my ping!")
 async def ping(ctx):
