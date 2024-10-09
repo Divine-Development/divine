@@ -7,6 +7,7 @@ import pathlib
 import asyncio
 import requests
 import sys
+import base64
 
 # Directories for guild settings and staff data
 SETTINGS_DIR = "database/guilds/"
@@ -147,6 +148,61 @@ async def checkupdate(ctx):
     else:
         await ctx.send(f"Failed to fetch commits: {response.status_code} - {response.text}")
 
+async def update_docs():
+    # GitHub repository details
+    GITHUB_REPO = "divine-development/divine"
+    file_path = "website/index.html"
+    branch = "main"
+
+    # GitHub personal access token
+    GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+
+    # Start building the HTML content
+    html_content = "<html><body><h1>Bot Commands</h1>"
+
+    # Iterate through all commands
+    for command in bot.commands:
+        html_content += f"<h2>{command.name}</h2>"
+        html_content += f"<p><strong>Description:</strong> {command.help or 'No description available.'}</p>"
+        html_content += "<p><strong>Usage:</strong> "
+        html_content += f"{bot.command_prefix}{command.name} {command.signature}</p>"
+        html_content += "<hr>"
+
+    # Close the HTML tags
+    html_content += "</body></html>"
+
+    try:
+        # Get the current file contents
+        url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{file_path}"
+        headers = {
+            "Authorization": f"token {GITHUB_TOKEN}",
+            "Accept": "application/vnd.github.v3+json"
+        }
+        response = requests.get(url, headers=headers)
+        
+        if response.status_code == 200:
+            current_file = response.json()
+            current_sha = current_file['sha']
+
+            # Update the file
+            update_url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{file_path}"
+            update_data = {
+                "message": "Update bot commands documentation",
+                "content": base64.b64encode(html_content.encode()).decode(),
+                "sha": current_sha,
+                "branch": branch
+            }
+            update_response = requests.put(update_url, headers=headers, json=update_data)
+
+            if update_response.status_code == 200:
+                print("Documentation updated successfully on GitHub.")
+            else:
+                print(f"Failed to update documentation. Status code: {update_response.status_code}")
+        else:
+            print(f"Failed to get current file contents. Status code: {response.status_code}")
+    except Exception as e:
+        print(f"An error occurred while updating the documentation: {str(e)}")
+
 # Bot startup event to initialize the staff member reloading task and status updates
 @bot.event
 async def on_ready():
@@ -163,6 +219,8 @@ async def on_ready():
 
     # Load existing appeals
     load_appeals()
+
+    await update_docs()
 
     # Create the appeal embed and buttons
     appeal_embed = discord.Embed(
