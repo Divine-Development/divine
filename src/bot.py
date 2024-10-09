@@ -8,6 +8,7 @@ import asyncio
 import requests
 import sys
 import base64
+import time
 
 # Directories for guild settings and staff data
 SETTINGS_DIR = "database/guilds/"
@@ -118,7 +119,7 @@ async def change_status():
     current_activity = activities[change_status.current_loop % len(activities)]
     await bot.change_presence(activity=current_activity)
 
-@bot.command()
+@bot.command(description="Check the github repository for updates! (Owner Only)")
 @commands.is_owner()  # Ensure only the bot owner can use this command
 async def checkupdate(ctx):
     global last_commit_sha
@@ -164,7 +165,7 @@ async def update_docs():
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Divine Bot Commands</title>
+        <title>Divine Commands</title>
         <style>
             body, html {
                 margin: 0;
@@ -224,7 +225,7 @@ async def update_docs():
     </head>
     <body>
         <div class="container">
-            <h1>Divine Bot Commands</h1>
+            <h1>Divine Commands</h1>
     """
 
     # Iterate through all commands
@@ -437,7 +438,7 @@ with open("help.json", "r") as f:
     help_data = json.load(f)
 
 # Custom Help Command
-@bot.command(name='help')
+@bot.command(description="Get help with using the bot!")
 async def help(ctx):
     embed = discord.Embed(
         title=help_data["title"],
@@ -471,7 +472,7 @@ def is_staff(user_id):
     return user_id in staff_members
 
 # Command to add a staff member (Bot owner only)
-@bot.command()
+@bot.command(description="Add a staff member to the Database. (Owner only)")
 @commands.is_owner()
 async def addstaff(ctx, user: str):
     staff_data = load_staff_data()
@@ -497,7 +498,7 @@ async def addstaff(ctx, user: str):
         await ctx.send(f"{user_obj.name} is already a staff member.")
 
 # Command to remove a staff member (Bot owner only)
-@bot.command()
+@bot.command(description="Remove a staff member from the Database. (Owner only)")
 @commands.is_owner()
 async def removestaff(ctx, user: str):
     staff_data = load_staff_data()
@@ -522,16 +523,52 @@ async def removestaff(ctx, user: str):
     else:
         await ctx.send(f"{user_obj.name} is not a staff member.")
 
-# Command to force update the staff list immediately (Bot owner only)
-@bot.command()
-@commands.is_owner()
-async def forcestaffupdate(ctx):
-    global staff_members
-    staff_data = load_staff_data()
-    staff_members = staff_data.get("staff", [])
-    await ctx.send(f"Staff list has been force-updated. Current staff: {len(staff_members)} members.")
+@bot.command(description="Check my ping!")
+async def ping(ctx):
+    start_time = time.time()  # Record start time for measuring latency
+    message = await ctx.send("Pinging...")  # Send a message to track the latency
 
-@bot.command()
+    # Calculate latency in milliseconds
+    bot_latency = round(bot.latency * 1000, 1)  # WebSocket latency
+    message_latency = round((time.time() - start_time) * 1000, 1)  # Time it took to send the message
+
+    # Create an Embed
+    embed = discord.Embed(title="🏓 Pong!", color=discord.Color.blue())
+    embed.add_field(name="Bot Latency (WebSocket)", value=f"{bot_latency}ms", inline=False)
+    embed.add_field(name="Message Latency", value=f"{message_latency}ms", inline=False)
+    embed.set_footer(text=f"Requested by {ctx.author}", icon_url=ctx.author.avatar.url)
+
+    # Edit the original message to include the latency results in an embed
+    await message.edit(content=None, embed=embed)
+
+@bot.command(description="Force reload staff data or guild settings. (Owner only)")
+@commands.is_owner()
+async def reload(ctx, option: str):
+    if option.lower() == "staff":
+        global staff_members
+        staff_data = load_staff_data()
+        staff_members = staff_data.get("staff", [])
+        await ctx.send(f"Staff list has been force-updated. Current staff: {len(staff_members)} members.")
+    elif option.lower() == "guilds":
+        guild_files = os.listdir(SETTINGS_DIR)
+        total_guilds = len(guild_files)
+        if total_guilds == 0:
+            await ctx.send("No guild settings found to reload.")
+            return
+        
+        message = await ctx.send(f"Reloading guild settings... 0/{total_guilds}")
+        
+        for index, guild_file in enumerate(guild_files):
+            guild_id = os.path.splitext(guild_file)[0]  # Extract the guild ID from the file name
+            load_guild_settings(guild_id)  # Load settings (this is just for demonstration)
+            await message.edit(content=f"Reloading guild settings... {index + 1}/{total_guilds}")
+            await asyncio.sleep(1)  # Adding a delay to show progress
+        
+        await message.edit(content="All guild settings reloaded.")
+    else:
+        await ctx.send("Invalid option. Use '!reload staff' or '!reload guilds'.")
+
+@bot.command(description="Setup the bot for your server. (Administrator permissions required or Admin role after being set-up via the setup command!)")
 async def setup(ctx, system: str = None, *, value: str = None):
     guild_id = ctx.guild.id
     settings = load_guild_settings(guild_id)
@@ -541,44 +578,45 @@ async def setup(ctx, system: str = None, *, value: str = None):
     has_permission = ctx.author.guild_permissions.administrator or (admin_role_id and discord.utils.get(ctx.guild.roles, id=admin_role_id) in ctx.author.roles)
 
     if not has_permission:
-        await ctx.send("You do not have permission to set this up.")
+        await ctx.reply("You do not have permission to set this up.")
         return
 
     if system is None or value is None:
-        await ctx.send("You must provide both a system (e.g., 'welcomer', 'adminrole', 'suggestions') and a value.")
+        await ctx.reply("You must provide both a system (e.g., 'welcomer', 'adminrole', 'suggestions') and a value.")
         return
 
     if system == "welcomer":
         try:
             channel = await commands.TextChannelConverter().convert(ctx, value)
             settings["welcome_channel"] = channel.id
-            await ctx.send(f"Welcome channel has been set to {channel.mention}")
+            embed = discord.Embed(title="Important Notice ⛔", description="The welcomer feature is currently broken! It'll be fixed in the future, Sorry for the inconvenience!", color=discord.Color.red())
+            await ctx.reply(f"Welcome channel has been set to {channel.mention}", embed=embed)
         except commands.BadArgument:
-            await ctx.send("Invalid channel. Please mention a valid text channel.")
+            await ctx.reply("Invalid channel. Please mention a valid text channel.")
 
     elif system == "adminrole":
         try:
             role = await commands.RoleConverter().convert(ctx, value)
             settings["admin_role"] = role.id
-            await ctx.send(f"Admin role has been set to {role.name}")
+            await ctx.reply(f"Admin role has been set to {role.name}")
         except commands.BadArgument:
-            await ctx.send("Invalid role. Please mention a valid role.")
+            await ctx.reply("Invalid role. Please mention a valid role.")
 
     elif system == "suggestions":
         try:
             channel = await commands.TextChannelConverter().convert(ctx, value)
             settings["suggestion_channel"] = channel.id
-            await ctx.send(f"Suggestion channel has been set to {channel.mention}")
+            await ctx.reply(f"Suggestion channel has been set to {channel.mention}")
         except commands.BadArgument:
-            await ctx.send("Invalid channel. Please mention a valid text channel.")
+            await ctx.reply("Invalid channel. Please mention a valid text channel.")
 
     else:
-        await ctx.send("Invalid system. Use 'welcomer', 'adminrole', or 'suggestions'.")
+        await ctx.reply("Invalid system. Use 'welcomer', 'adminrole', or 'suggestions'.")
 
     save_guild_settings(guild_id, settings)
 
 # Command to submit a suggestion
-@bot.command()
+@bot.command(description="Create a suggestion inside a server with me! (Must be setup via !setup [suggestions] [channel])")
 async def suggest(ctx, *, suggestion: str):
     guild_id = ctx.guild.id
     settings = load_guild_settings(guild_id)
@@ -608,7 +646,7 @@ async def suggest(ctx, *, suggestion: str):
     await ctx.send(f"Your suggestion has been sent to {suggestion_channel.mention}")
 
 # Command to view current guild settings (Admin only)
-@bot.command()
+@bot.command(description="Get the guild's settings! (Administrator permission required)")
 @commands.has_permissions(administrator=True)
 async def viewsettings(ctx):
     guild_id = ctx.guild.id
@@ -624,28 +662,8 @@ async def viewsettings(ctx):
     embed.add_field(name="Admin Role", value=admin_role, inline=False)
     await ctx.send(embed=embed)
 
-# Command to reload all guild JSON files and update a progress message (Bot owner only)
-@bot.command()
-@commands.is_owner()
-async def reloadguilds(ctx):
-    guild_files = os.listdir(SETTINGS_DIR)
-    total_guilds = len(guild_files)
-    if total_guilds == 0:
-        await ctx.send("No guild settings found to reload.")
-        return
-
-    message = await ctx.send(f"Reloading guild settings... 0/{total_guilds}")
-    
-    for index, guild_file in enumerate(guild_files):
-        guild_id = os.path.splitext(guild_file)[0]  # Extract the guild ID from the file name
-        load_guild_settings(guild_id)  # Load settings (this is just for demonstration)
-        await message.edit(content=f"Reloading guild settings... {index + 1}/{total_guilds}")
-        await asyncio.sleep(1)  # Adding a delay to show progress
-
-    await message.edit(content="All guild settings reloaded.")
-
 # Owner-only command to retrieve the JSON settings for a guild
-@bot.command()
+@bot.command(description="Get my ping!")
 @commands.is_owner()
 async def data(ctx, guild_id: int):
     file_path = f"{SETTINGS_DIR}{guild_id}.json"
