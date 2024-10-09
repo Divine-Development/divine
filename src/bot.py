@@ -103,12 +103,36 @@ async def check_github_updates():
     else:
         print(f"Failed to fetch commits: {response.status_code} - {response.text}")
 
-# Bot startup event to initialize the staff member reloading task
+# Set up the status loop
+@tasks.loop(seconds=15)
+async def change_status():
+    server_count = len(bot.guilds)  # Get the number of guilds the bot is in
+
+    # Create the activities based on the status messages
+    activities = [
+        discord.Game("Playing With commands!"),
+        discord.Activity(type=discord.ActivityType.watching, name=f"{server_count} guilds!"),
+        discord.Activity(type=discord.ActivityType.listening, name="Commands"),
+        discord.Streaming(name="Streaming Minecraft", url="https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+    ]
+
+    # Change the bot's activity to the next one in the list
+    current_activity = activities[change_status.current_loop % len(activities)]
+    await bot.change_presence(activity=current_activity)
+
+# Bot startup event to initialize the staff member reloading task and status updates
 @bot.event
 async def on_ready():
     print(f"Bot is online and logged in as {bot.user.name}")
-    update_staff_list.start()  # Start the periodic staff update
-    check_github_updates.start()  # Start checking for GitHub updates
+    
+    # Start the periodic staff update
+    update_staff_list.start()
+    
+    # Start checking for GitHub updates
+    check_github_updates.start()
+
+    # Start changing the bot's status
+    change_status.start()
 
 # Load help data from JSON
 with open("help.json", "r") as f:
