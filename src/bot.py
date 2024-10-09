@@ -74,13 +74,13 @@ def get_staff_data():
 
 # Function to load staff data
 def load_vip_data():
-    with open(DATA_DIR, 'r') as f:
-        return json.load(f)
+    with open(DATA_DIR, 'r') as e:
+        return json.load(e)
 
 # Function to save staff data
 def save_vip_data(DATA_DIR):
-    with open(DATA_DIR, 'w') as f:
-        json.dump(DATA_DIR, f, indent=4)
+    with open(DATA_DIR, 'w') as e:
+        json.dump(DATA_DIR, e, indent=4)
 
 def get_vip_data():
     return load_vip_data()
