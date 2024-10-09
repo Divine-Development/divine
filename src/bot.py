@@ -150,6 +150,13 @@ async def checkupdate(ctx):
         await ctx.send(f"Failed to fetch commits: {response.status_code} - {response.text}")
 
 async def update_docs():
+    # Check if the function has already been run
+    if not hasattr(update_docs, 'has_run'):
+        update_docs.has_run = True
+    else:
+        print("Documentation update has already been performed.")
+        return
+
     # GitHub repository details
     GITHUB_REPO = "divine-development/divine"
     file_path = "commands/index.html"
