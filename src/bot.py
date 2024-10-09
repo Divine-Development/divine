@@ -69,6 +69,7 @@ def get_staff_data():
 intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents)
+bot.remove_command('help')
 
 env_path = pathlib.Path('database/.env')
 load_dotenv(dotenv_path=env_path)
@@ -108,7 +109,6 @@ async def on_ready():
     print(f"Bot is online and logged in as {bot.user.name}")
     update_staff_list.start()  # Start the periodic staff update
     check_github_updates.start()  # Start checking for GitHub updates
-    bot.remove_command('help')  # Remove the default help command
 
 # Load help data from JSON
 with open("help.json", "r") as f:
@@ -211,7 +211,7 @@ async def forcestaffupdate(ctx):
     await ctx.send(f"Staff list has been force-updated. Current staff: {len(staff_members)} members.")
 
 @bot.command()
-async def setup(ctx, system: str, value: str):
+async def setup(ctx, system: str = None, *, value: str = None):
     guild_id = ctx.guild.id
     settings = load_guild_settings(guild_id)
     
@@ -223,8 +223,8 @@ async def setup(ctx, system: str, value: str):
         await ctx.send("You do not have permission to set this up.")
         return
 
-    if not value:
-        await ctx.send("You must provide a value for the setup command.")
+    if system is None or value is None:
+        await ctx.send("You must provide both a system (e.g., 'welcomer', 'adminrole', 'suggestions') and a value.")
         return
 
     if system == "welcomer":
