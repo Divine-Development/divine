@@ -179,7 +179,7 @@ async def on_ready():
     # Define the button callbacks
     async def appeal_button_callback(interaction: discord.Interaction):
         # Create a modal to gather appeal details
-        modal = discord.ui.Modal(title="Appeal Form", timeout=300)
+        modal = discord.ui.Modal(title="Appeal Form")
 
         # Add fields to the modal
         modal.add_item(discord.ui.TextInput(label="Appeal type", placeholder="Server ban, punishment appeal, etc.", style=discord.TextStyle.short))
@@ -207,7 +207,7 @@ async def on_ready():
 
             # Notify the bot owner and the user who submitted the appeal
             bot_owner = await bot.fetch_user(898255050592366642)  # Replace with your actual bot owner ID
-            await appeal_channel.send(f"{bot_owner.mention}, {modal_interaction.user.mention}, here is the appeal:", embed=appeal_details_embed, view2=view2)
+            await appeal_channel.send(f"{bot_owner.mention}, {modal_interaction.user.mention}, here is the appeal:", embed=appeal_details_embed, view=view2)
 
             # Save the appeal channel ID
             save_appeal(appeal_channel.id, modal_interaction.user.id)
@@ -228,7 +228,7 @@ async def on_ready():
             await interaction.response.send_message("This is not an appeal channel.", ephemeral=True)
             return
 
-        close_modal = discord.ui.Modal(title="Close Appeal", timeout=300)
+        close_modal = discord.ui.Modal(title="Close Appeal")
         close_modal.add_item(discord.ui.TextInput(label="Reason for closing", style=discord.TextStyle.paragraph))
 
         async def close_modal_callback(close_modal_interaction: discord.Interaction):
@@ -250,11 +250,10 @@ async def on_ready():
     close_button.callback = close_button_callback
 
     # Create a view and add the buttons to it
-    view = discord.ui.View()
+    view = discord.ui.View(timeout=None)
     view.add_item(appeal_button)
-    view2 = discord.ui.View()
+    view2 = discord.ui.View(timeout=None)
     view2.add_item(close_button)
-    
 
     # Send the appeal panel to a specific channel
     channel = bot.get_channel(1293591350524121172)  # Replace with the ID of the channel you want to send the appeal panel to
