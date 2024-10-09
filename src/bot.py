@@ -386,7 +386,6 @@ async def on_ready():
             # Create a private channel for the appeal
             overwrites = {
                 interaction.guild.default_role: discord.PermissionOverwrite(read_messages=False),
-                interaction.guild.me: discord.PermissionOverwrite(read_messages=True),
                 interaction.guild.owner: discord.PermissionOverwrite(read_messages=True),
                 modal_interaction.user: discord.PermissionOverwrite(read_messages=True)
             }
@@ -436,8 +435,7 @@ async def on_ready():
             try:
                 await user.send(f"Your appeal has been closed. Reason: {reason}")
             except discord.errors.Forbidden:
-                await interaction.send_message(f"Unable to DM {user.mention}. Appeal closed. Reason: {reason} || Deleting in 5 seconds!")
-                await asyncio.wait(5)
+                await interaction.channel.send(f"Unable to DM {user.mention}. Appeal closed. Reason: {reason}")
             await interaction.channel.delete()
             remove_appeal(interaction.channel_id)
 
