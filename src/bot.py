@@ -248,7 +248,6 @@ async def update_staff_list():
     global staff_members
     staff_data = load_staff_data()
     staff_members = staff_data.get("staff", [])
-    print(f"Updated staff members: {staff_members}")
 
 # Function to check if a user is a staff member
 def is_staff(user_id):
