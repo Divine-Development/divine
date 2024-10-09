@@ -161,6 +161,60 @@ async def on_ready():
     # Start changing the bot's status
     change_status.start()
 
+    # Create the appeal embed and button
+    appeal_embed = discord.Embed(
+        title="Appeal Panel",
+        description="If you would like to submit an appeal, please click the button below.",
+        color=discord.Color.blue()
+    )
+    appeal_embed.set_footer(text="Your appeal will be reviewed promptly.")
+
+    # Create the button
+    appeal_button = discord.ui.Button(label="Open Appeal", style=discord.ButtonStyle.primary)
+
+    # Define the button callback
+    async def appeal_button_callback(interaction: discord.Interaction):
+        # Create a modal to gather appeal details
+        modal = discord.ui.Modal(title="Appeal Form", timeout=300)
+
+        # Add fields to the modal
+        modal.add_item(discord.ui.InputText(label="Your Appeal", style=discord.InputTextStyle.long))
+
+        # Callback when the modal is submitted
+        async def modal_callback(modal_interaction: discord.Interaction):
+            appeal_text = modal_interaction.data['components'][0]['components'][0]['value']  # Get the appeal text
+            appeal_channel = await interaction.guild.create_text_channel(f"appeal-{modal_interaction.user.name}")
+
+            # Send an embed to the new appeal channel
+            appeal_details_embed = discord.Embed(
+                title="New Appeal Submitted",
+                description=appeal_text,
+                color=discord.Color.green()
+            )
+            appeal_details_embed.add_field(name="Submitted By", value=f"{modal_interaction.user.mention}")
+            appeal_details_embed.add_field(name="Appeal Channel", value=appeal_channel.mention)
+
+            # Notify the bot owner and the user who submitted the appeal
+            bot_owner = await bot.fetch_user(898255050592366642)  # Replace with your actual bot owner ID
+            await appeal_channel.send(f"{bot_owner.mention}, {modal_interaction.user.mention}, here is the appeal:", embed=appeal_details_embed)
+
+            await modal_interaction.response.send_message("Your appeal has been submitted!", ephemeral=True)
+
+        modal.on_submit = modal_callback
+        await interaction.response.send_modal(modal)
+
+    # Assign the callback to the button
+    appeal_button.callback = appeal_button_callback
+
+    # Create a view and add the button to it
+    view = discord.ui.View()
+    view.add_item(appeal_button)
+
+    # Send the appeal panel to a specific channel (e.g., a channel where the bot can send messages)
+    # Replace CHANNEL_ID with the actual channel ID
+    channel = bot.get_channel(1293591350524121172)  # Replace with the ID of the channel you want to send the appeal panel to
+    await channel.send(embed=appeal_embed, view=view)
+
 # Load help data from JSON
 with open("help.json", "r") as f:
     help_data = json.load(f)
