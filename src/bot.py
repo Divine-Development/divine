@@ -178,7 +178,8 @@ async def on_ready():
         modal = discord.ui.Modal(title="Appeal Form", timeout=300)
 
         # Add fields to the modal
-        modal.add_item(discord.ui.InputText(label="Your Appeal", style=discord.InputTextStyle.long))
+        modal.add_item(discord.ui.TextInput(label="Appeal type (Server ban, punishment appeal)", style=discord.TextStyle.long))
+        modal.add_item(discord.ui.TextInput(label="Why should we accept this appeal?", style=discord.TextStyle.long))
 
         # Callback when the modal is submitted
         async def modal_callback(modal_interaction: discord.Interaction):
@@ -197,6 +198,36 @@ async def on_ready():
             # Notify the bot owner and the user who submitted the appeal
             bot_owner = await bot.fetch_user(898255050592366642)  # Replace with your actual bot owner ID
             await appeal_channel.send(f"{bot_owner.mention}, {modal_interaction.user.mention}, here is the appeal:", embed=appeal_details_embed)
+
+            # Create close button
+            close_button = discord.ui.Button(label="Close Appeal", style=discord.ButtonStyle.danger)
+
+            async def close_button_callback(close_interaction: discord.Interaction):
+                if close_interaction.user.id != bot.owner_id:
+                    await close_interaction.response.send_message("Only the bot owner can close appeals.", ephemeral=True)
+                    return
+
+                close_modal = discord.ui.Modal(title="Close Appeal", timeout=300)
+                close_modal.add_item(discord.ui.TextInput(label="Reason for closing", style=discord.TextStyle.long))
+
+                async def close_modal_callback(close_modal_interaction: discord.Interaction):
+                    reason = close_modal_interaction.data['components'][0]['components'][0]['value']
+                    user = modal_interaction.user
+                    try:
+                        await user.send(f"Your appeal has been closed. Reason: {reason}")
+                    except discord.errors.Forbidden:
+                        await appeal_channel.send(f"Unable to DM {user.mention}. Appeal closed. Reason: {reason}")
+                    await appeal_channel.delete()
+
+                close_modal.on_submit = close_modal_callback
+                await close_interaction.response.send_modal(close_modal)
+
+            close_button.callback = close_button_callback
+
+            close_view = discord.ui.View()
+            close_view.add_item(close_button)
+
+            await appeal_channel.send("Use this button to close the appeal:", view=close_view)
 
             await modal_interaction.response.send_message("Your appeal has been submitted!", ephemeral=True)
 
