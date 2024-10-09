@@ -533,9 +533,65 @@ vips = []
 # Function to periodically update staff members every 20 seconds
 @tasks.loop(seconds=20)
 async def update_vip_list():
-    global staff_members
+    global vips
     vips = load_vip_data()
-    vip_member = vips.get("vips", [])
+    vip = vips.get("vips", [])
+
+# Function to check if a user is a staff member
+def is_vip(user_id):
+    return user_id in vips
+
+# Command to add a staff member (Bot owner only)
+@bot.command(description="Grant someone VIP (Owner only)")
+@commands.is_owner()
+async def addvip(ctx, user: str):
+    vips = load_vip_data()
+
+    # Determine if the input is a user ID or a username
+    if user.isdigit():  # If input is a number, treat it as a user ID
+        user_id = int(user)
+        user_obj = ctx.guild.get_member(user_id)
+        if user_obj is None:
+            await ctx.send("User not found in this guild.")
+            return
+    else:  # Otherwise, treat it as a username
+        user_obj = discord.utils.get(ctx.guild.members, name=user)
+        if user_obj is None:
+            await ctx.send("User not found in this guild.")
+            return
+
+    if user_obj.id not in vips['vips']:
+        vips['vips'].append(user_obj.id)
+        save_vip_data(vips)
+        await ctx.send(f"Added {user_obj.name} to the VIP list.")
+    else:
+        await ctx.send(f"{user_obj.name} is already a VIP member.")
+
+# Command to remove a staff member (Bot owner only)
+@bot.command(description="Remove VIP from someone (Owner only)")
+@commands.is_owner()
+async def removevip(ctx, user: str):
+    vips = load_vip_data()
+
+    # Determine if the input is a user ID or a username
+    if user.isdigit():  # If input is a number, treat it as a user ID
+        user_id = int(user)
+        user_obj = ctx.guild.get_member(user_id)
+        if user_obj is None:
+            await ctx.send("User not found in this guild.")
+            return
+    else:  # Otherwise, treat it as a username
+        user_obj = discord.utils.get(ctx.guild.members, name=user)
+        if user_obj is None:
+            await ctx.send("User not found in this guild.")
+            return
+
+    if user_obj.id in vips['vips']:
+        vips['vips'].remove(user_obj.id)
+        save_vip_data(vips)
+        await ctx.send(f"Removed {user_obj.name} from the VIP list.")
+    else:
+        await ctx.send(f"{user_obj.name} is not a VIP member.")
 
 # Function to check if a user is a staff member
 def is_staff(user_id):
