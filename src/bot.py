@@ -161,90 +161,125 @@ async def on_ready():
     # Start changing the bot's status
     change_status.start()
 
-    # Create the appeal embed and button
+    # Load existing appeals
+    load_appeals()
+
+    # Create the appeal embed and buttons
     appeal_embed = discord.Embed(
-        title="Appeal Panel",
-        description="If you would like to submit an appeal, please click the button below.",
+        title="🔔 Appeal Panel",
+        description="If you would like to submit an appeal, please click the 'Open Appeal' button below.\n\n✉️ Your appeal will be reviewed promptly.",
         color=discord.Color.blue()
     )
-    appeal_embed.set_footer(text="Your appeal will be reviewed promptly.")
+    appeal_embed.set_footer(text="We appreciate your patience during this process.")
 
-    # Create the button
-    appeal_button = discord.ui.Button(label="Open Appeal", style=discord.ButtonStyle.primary)
+    # Create the buttons
+    appeal_button = discord.ui.Button(label="Open Appeal", style=discord.ButtonStyle.primary, emoji="📝")
+    close_button = discord.ui.Button(label="Close Appeal", style=discord.ButtonStyle.danger, emoji="🔒")
 
-    # Define the button callback
+    # Define the button callbacks
     async def appeal_button_callback(interaction: discord.Interaction):
         # Create a modal to gather appeal details
         modal = discord.ui.Modal(title="Appeal Form", timeout=300)
 
         # Add fields to the modal
-        modal.add_item(discord.ui.TextInput(label="Appeal type (Server ban, punishment appeal)", style=discord.TextStyle.long))
-        modal.add_item(discord.ui.TextInput(label="Why should we accept this appeal?", style=discord.TextStyle.long))
+        modal.add_item(discord.ui.TextInput(label="Appeal type", placeholder="Server ban, punishment appeal, etc.", style=discord.TextStyle.short))
+        modal.add_item(discord.ui.TextInput(label="Reason for appeal", placeholder="Explain why you're appealing", style=discord.TextStyle.paragraph))
+        modal.add_item(discord.ui.TextInput(label="Additional information", placeholder="Any other relevant details", style=discord.TextStyle.paragraph))
 
         # Callback when the modal is submitted
         async def modal_callback(modal_interaction: discord.Interaction):
-            appeal_text = modal_interaction.data['components'][0]['components'][0]['value']  # Get the appeal text
+            appeal_type = modal_interaction.data['components'][0]['components'][0]['value']
+            appeal_reason = modal_interaction.data['components'][1]['components'][0]['value']
+            additional_info = modal_interaction.data['components'][2]['components'][0]['value']
+
             appeal_channel = await interaction.guild.create_text_channel(f"appeal-{modal_interaction.user.name}")
 
             # Send an embed to the new appeal channel
             appeal_details_embed = discord.Embed(
-                title="New Appeal Submitted",
-                description=appeal_text,
+                title="📋 New Appeal Submitted",
                 color=discord.Color.green()
             )
-            appeal_details_embed.add_field(name="Submitted By", value=f"{modal_interaction.user.mention}")
-            appeal_details_embed.add_field(name="Appeal Channel", value=appeal_channel.mention)
+            appeal_details_embed.add_field(name="Submitted By", value=f"{modal_interaction.user.mention}", inline=False)
+            appeal_details_embed.add_field(name="Appeal Type", value=appeal_type, inline=False)
+            appeal_details_embed.add_field(name="Reason for Appeal", value=appeal_reason, inline=False)
+            appeal_details_embed.add_field(name="Additional Information", value=additional_info, inline=False)
+            appeal_details_embed.add_field(name="Appeal Channel", value=appeal_channel.mention, inline=False)
 
             # Notify the bot owner and the user who submitted the appeal
             bot_owner = await bot.fetch_user(898255050592366642)  # Replace with your actual bot owner ID
             await appeal_channel.send(f"{bot_owner.mention}, {modal_interaction.user.mention}, here is the appeal:", embed=appeal_details_embed)
 
-            # Create close button
-            close_button = discord.ui.Button(label="Close Appeal", style=discord.ButtonStyle.danger)
-
-            async def close_button_callback(close_interaction: discord.Interaction):
-                if close_interaction.user.id != bot.owner_id:
-                    await close_interaction.response.send_message("Only the bot owner can close appeals.", ephemeral=True)
-                    return
-
-                close_modal = discord.ui.Modal(title="Close Appeal", timeout=300)
-                close_modal.add_item(discord.ui.TextInput(label="Reason for closing", style=discord.TextStyle.long))
-
-                async def close_modal_callback(close_modal_interaction: discord.Interaction):
-                    reason = close_modal_interaction.data['components'][0]['components'][0]['value']
-                    user = modal_interaction.user
-                    try:
-                        await user.send(f"Your appeal has been closed. Reason: {reason}")
-                    except discord.errors.Forbidden:
-                        await appeal_channel.send(f"Unable to DM {user.mention}. Appeal closed. Reason: {reason}")
-                    await appeal_channel.delete()
-
-                close_modal.on_submit = close_modal_callback
-                await close_interaction.response.send_modal(close_modal)
-
-            close_button.callback = close_button_callback
-
-            close_view = discord.ui.View()
-            close_view.add_item(close_button)
-
-            await appeal_channel.send("Use this button to close the appeal:", view=close_view)
+            # Save the appeal channel ID
+            save_appeal(appeal_channel.id, modal_interaction.user.id)
 
             await modal_interaction.response.send_message("Your appeal has been submitted!", ephemeral=True)
 
         modal.on_submit = modal_callback
         await interaction.response.send_modal(modal)
 
-    # Assign the callback to the button
-    appeal_button.callback = appeal_button_callback
+    async def close_button_callback(interaction: discord.Interaction):
+        if interaction.user.id != bot.owner_id:
+            await interaction.response.send_message("Only the bot owner can close appeals.", ephemeral=True)
+            return
 
-    # Create a view and add the button to it
+        # Check if the channel is an appeal channel
+        appeal_data = load_appeals()
+        if str(interaction.channel_id) not in appeal_data:
+            await interaction.response.send_message("This is not an appeal channel.", ephemeral=True)
+            return
+
+        close_modal = discord.ui.Modal(title="Close Appeal", timeout=300)
+        close_modal.add_item(discord.ui.TextInput(label="Reason for closing", style=discord.TextStyle.paragraph))
+
+        async def close_modal_callback(close_modal_interaction: discord.Interaction):
+            reason = close_modal_interaction.data['components'][0]['components'][0]['value']
+            user_id = appeal_data[str(interaction.channel_id)]
+            user = await bot.fetch_user(int(user_id))
+            try:
+                await user.send(f"Your appeal has been closed. Reason: {reason}")
+            except discord.errors.Forbidden:
+                await interaction.channel.send(f"Unable to DM {user.mention}. Appeal closed. Reason: {reason}")
+            await interaction.channel.delete()
+            remove_appeal(interaction.channel_id)
+
+        close_modal.on_submit = close_modal_callback
+        await interaction.response.send_modal(close_modal)
+
+    # Assign the callbacks to the buttons
+    appeal_button.callback = appeal_button_callback
+    close_button.callback = close_button_callback
+
+    # Create a view and add the buttons to it
     view = discord.ui.View()
     view.add_item(appeal_button)
+    view.add_item(close_button)
 
-    # Send the appeal panel to a specific channel (e.g., a channel where the bot can send messages)
-    # Replace CHANNEL_ID with the actual channel ID
+    # Send the appeal panel to a specific channel
     channel = bot.get_channel(1293591350524121172)  # Replace with the ID of the channel you want to send the appeal panel to
+    
+    # Clear all messages in the channel
+    await channel.purge()
+    
+    # Send the new appeal panel
     await channel.send(embed=appeal_embed, view=view)
+
+def save_appeal(channel_id, user_id):
+    appeals = load_appeals()
+    appeals[str(channel_id)] = str(user_id)
+    with open('appeals.json', 'w') as f:
+        json.dump(appeals, f)
+
+def remove_appeal(channel_id):
+    appeals = load_appeals()
+    appeals.pop(str(channel_id), None)
+    with open('appeals.json', 'w') as f:
+        json.dump(appeals, f)
+
+def load_appeals():
+    if os.path.exists('appeals.json'):
+        with open('appeals.json', 'r') as f:
+            return json.load(f)
+    return {}
 
 # Set up the status loop
 @tasks.loop(seconds=10)
