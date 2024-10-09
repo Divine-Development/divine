@@ -215,6 +215,13 @@ async def on_ready():
     channel = bot.get_channel(1293591350524121172)  # Replace with the ID of the channel you want to send the appeal panel to
     await channel.send(embed=appeal_embed, view=view)
 
+# Set up the status loop
+@tasks.loop(seconds=10)
+async def change_status():
+    server_count = len(bot.guilds)  # Get the number of guilds the bot is in
+    activity = discord.Activity(type=discord.ActivityType.watching, name=f"{server_count} guilds! || !help")
+    await bot.change_presence(activity=activity)
+
 # Load help data from JSON
 with open("help.json", "r") as f:
     help_data = json.load(f)
