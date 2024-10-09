@@ -463,6 +463,23 @@ async def change_status():
 with open("help.json", "r") as f:
     help_data = json.load(f)
 
+@bot.command(description="Add the configuration to a guild (Owner only)")
+@commands.is_owner()
+async def create(ctx, guild_id: int):
+    config = {
+        "welcome_channel": None,
+        "admin_role": None,
+        "suggestion_channel": None,
+        "verified": None
+    }
+    
+    filename = f"{guild_id}.json"
+    
+    with open(filename, 'w') as f:
+        json.dump(config, f, indent=4)
+    
+    await ctx.send(f"Config file '{filename}' has been created with default settings.")
+
 # Custom Help Command
 @bot.command(description="Get help with using the bot!")
 async def help(ctx):
