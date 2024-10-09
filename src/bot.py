@@ -158,18 +158,103 @@ async def update_docs():
     GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 
     # Start building the HTML content
-    html_content = "<html><body><h1>Bot Commands</h1>"
+    html_content = """
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Divine Bot Commands</title>
+        <style>
+            body, html {
+                margin: 0;
+                padding: 0;
+                height: 100%;
+                font-family: Arial, sans-serif;
+                color: #fff;
+                background: #000 url('https://images.unsplash.com/photo-1519681393784-d120267933ba') no-repeat center center fixed;
+                background-size: cover;
+            }
+            .container {
+                max-width: 800px;
+                margin: 0 auto;
+                padding: 20px;
+                background-color: rgba(0, 0, 0, 0.7);
+                min-height: 100%;
+                box-sizing: border-box;
+            }
+            h1 {
+                text-align: center;
+                color: #fff;
+                font-size: 3em;
+                margin-bottom: 30px;
+                animation: glow 2s ease-in-out infinite alternate;
+            }
+            .command {
+                background-color: rgba(255, 255, 255, 0.1);
+                border-radius: 10px;
+                padding: 15px;
+                margin-bottom: 20px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+            }
+            .command:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 5px 15px rgba(255, 255, 255, 0.2);
+            }
+            .command h2 {
+                margin-top: 0;
+                color: #4da6ff;
+            }
+            .command-details {
+                display: none;
+                margin-top: 10px;
+                padding-top: 10px;
+                border-top: 1px solid rgba(255, 255, 255, 0.2);
+            }
+            @keyframes glow {
+                from {
+                    text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #fff, 0 0 20px #4da6ff, 0 0 35px #4da6ff, 0 0 40px #4da6ff, 0 0 50px #4da6ff, 0 0 75px #4da6ff;
+                }
+                to {
+                    text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #fff, 0 0 40px #4da6ff, 0 0 70px #4da6ff, 0 0 80px #4da6ff, 0 0 100px #4da6ff, 0 0 150px #4da6ff;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Divine Bot Commands</h1>
+    """
 
     # Iterate through all commands
     for command in bot.commands:
-        html_content += f"<h2>{command.name}</h2>"
-        html_content += f"<p><strong>Description:</strong> {command.help or 'No description available.'}</p>"
-        html_content += "<p><strong>Usage:</strong> "
-        html_content += f"{bot.command_prefix}{command.name} {command.signature}</p>"
-        html_content += "<hr>"
+        html_content += f"""
+            <div class="command" onclick="toggleDetails(this)">
+                <h2>{command.name}</h2>
+                <div class="command-details">
+                    <p><strong>Description:</strong> {command.help or 'No description available.'}</p>
+                    <p><strong>Usage:</strong> {bot.command_prefix}{command.name} {command.signature}</p>
+                </div>
+            </div>
+        """
 
-    # Close the HTML tags
-    html_content += "</body></html>"
+    # Close the HTML content
+    html_content += """
+        </div>
+        <script>
+            function toggleDetails(element) {
+                var details = element.querySelector('.command-details');
+                if (details.style.display === 'none' || details.style.display === '') {
+                    details.style.display = 'block';
+                } else {
+                    details.style.display = 'none';
+                }
+            }
+        </script>
+    </body>
+    </html>
+    """
 
     try:
         # Get the current file contents
