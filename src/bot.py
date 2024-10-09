@@ -335,7 +335,6 @@ async def update_docs():
     except Exception as e:
         print(f"An error occurred while updating the documentation: {str(e)}")
 
-# Bot startup event to initialize the staff member reloading task and status updates
 @bot.event
 async def on_ready():
     print(f"Bot is online and logged in as {bot.user.name}")
@@ -384,7 +383,14 @@ async def on_ready():
             appeal_reason = modal_interaction.data['components'][1]['components'][0]['value']
             additional_info = modal_interaction.data['components'][2]['components'][0]['value']
 
-            appeal_channel = await interaction.guild.create_text_channel(f"appeal-{modal_interaction.user.name}")
+            # Create a private channel for the appeal
+            overwrites = {
+                interaction.guild.default_role: discord.PermissionOverwrite(read_messages=False),
+                interaction.guild.me: discord.PermissionOverwrite(read_messages=True),
+                interaction.guild.owner: discord.PermissionOverwrite(read_messages=True),
+                modal_interaction.user: discord.PermissionOverwrite(read_messages=True)
+            }
+            appeal_channel = await interaction.guild.create_text_channel(f"appeal-{modal_interaction.user.name}", overwrites=overwrites)
 
             # Send an embed to the new appeal channel
             appeal_details_embed = discord.Embed(
@@ -430,7 +436,8 @@ async def on_ready():
             try:
                 await user.send(f"Your appeal has been closed. Reason: {reason}")
             except discord.errors.Forbidden:
-                await interaction.channel.send(f"Unable to DM {user.mention}. Appeal closed. Reason: {reason}")
+                await interaction.send_message(f"Unable to DM {user.mention}. Appeal closed. Reason: {reason} || Deleting in 5 seconds!")
+                await asyncio.wait(5)
             await interaction.channel.delete()
             remove_appeal(interaction.channel_id)
 
