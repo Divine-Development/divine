@@ -80,9 +80,10 @@ def load_vip_data():
         return json.load(f)
 
 # Function to save VIP data to a JSON file
-def save_vip_data(data):
+def save_vip_data(vip_ids):
+    data = {"vips": vip_ids}
     with open(DATA_DIR, 'w') as f:
-        json.dump(data, f, indent=4)
+        json.dump(data, f)
 
 def get_vip_data():
     return load_vip_data()
