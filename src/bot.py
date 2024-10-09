@@ -234,7 +234,7 @@ async def update_docs():
             <div class="command" onclick="toggleDetails(this)">
                 <h2>{command.name}</h2>
                 <div class="command-details">
-                    <p><strong>Description:</strong> {command.help or 'No description available.'}</p>
+                    <p><strong>Description:</strong> {command.description or 'No description available.'}</p>
                     <p><strong>Usage:</strong> {bot.command_prefix}{command.name} {command.signature}</p>
                 </div>
             </div>
