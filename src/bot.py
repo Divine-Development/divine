@@ -75,14 +75,14 @@ def get_staff_data():
 # Function to load VIP data from a JSON file
 def load_vip_data():
     if not os.path.exists(DATA_DIR):
-        return {"vips": []}  # Return an empty list if the file doesn't exist
+        return {"vips": {}}  # Return an empty list if the file doesn't exist
     with open(DATA_DIR, 'r') as f:
         return json.load(f)
 
 def save_vip_data(vip_ids):
     data = vip_ids
     with open(DATA_DIR, 'w') as f:
-        json.dump(data, f, indent=4)
+        json.dump({data}, f, indent=4)
 
 def get_vip_data():
     return load_vip_data()
