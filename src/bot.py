@@ -434,6 +434,83 @@ async def setup(ctx, system: str = None, *, value: str = None):
 
     save_guild_settings(guild_id, settings)
 
+# Command to submit a suggestion
+@bot.command()
+async def suggest(ctx, *, suggestion: str):
+    guild_id = ctx.guild.id
+    settings = load_guild_settings(guild_id)
+    suggestion_channel_id = settings.get("suggestion_channel")
+
+    if suggestion_channel_id is None:
+        await ctx.send("Suggestion channel is not set. Please ask an admin to set it using the `setup suggestions` command.")
+        return
+
+    suggestion_channel = bot.get_channel(suggestion_channel_id)
+    if suggestion_channel is None:
+        await ctx.send("Suggestion channel not found. Please ask an admin to reconfigure it.")
+        return
+
+    embed = discord.Embed(
+        title="New Suggestion",
+        description=suggestion,
+        color=discord.Color.blue()
+    )
+    embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar.url)
+    embed.set_footer(text=f"Suggested by {ctx.author.name}", icon_url=ctx.author.avatar.url)
+
+    suggestion_message = await suggestion_channel.send(embed=embed)
+    await suggestion_message.add_reaction("✅")
+    await suggestion_message.add_reaction("⛔")
+
+    await ctx.send(f"Your suggestion has been sent to {suggestion_channel.mention}")
+
+# Command to view current guild settings (Admin only)
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def viewsettings(ctx):
+    guild_id = ctx.guild.id
+    settings = get_guild_data(guild_id)
+    welcome_channel = settings.get("welcome_channel", "Not set")
+    admin_role = settings.get("admin_role", "Not set")
+
+    welcome_channel = f"<#{welcome_channel}>" if welcome_channel != "Not set" else "Not set"
+    admin_role = f"<@&{admin_role}>" if admin_role != "Not set" else "Not set"
+
+    embed = discord.Embed(title=f"Settings for {ctx.guild.name}", color=discord.Color.blue())
+    embed.add_field(name="Welcome Channel", value=welcome_channel, inline=False)
+    embed.add_field(name="Admin Role", value=admin_role, inline=False)
+    await ctx.send(embed=embed)
+
+# Command to reload all guild JSON files and update a progress message (Bot owner only)
+@bot.command()
+@commands.is_owner()
+async def reloadguilds(ctx):
+    guild_files = os.listdir(SETTINGS_DIR)
+    total_guilds = len(guild_files)
+    if total_guilds == 0:
+        await ctx.send("No guild settings found to reload.")
+        return
+
+    message = await ctx.send(f"Reloading guild settings... 0/{total_guilds}")
+    
+    for index, guild_file in enumerate(guild_files):
+        guild_id = os.path.splitext(guild_file)[0]  # Extract the guild ID from the file name
+        load_guild_settings(guild_id)  # Load settings (this is just for demonstration)
+        await message.edit(content=f"Reloading guild settings... {index + 1}/{total_guilds}")
+        await asyncio.sleep(1)  # Adding a delay to show progress
+
+    await message.edit(content="All guild settings reloaded.")
+
+# Owner-only command to retrieve the JSON settings for a guild
+@bot.command()
+@commands.is_owner()
+async def data(ctx, guild_id: int):
+    file_path = f"{SETTINGS_DIR}{guild_id}.json"
+    if os.path.exists(file_path):
+        await ctx.send(file=discord.File(file_path, f"{guild_id}.json"))
+    else:
+        await ctx.send(f"No settings file found for guild ID {guild_id}")
+
 # Start the bot with your token
 TOKEN = os.getenv("TOKEN")
 bot.run(TOKEN)
