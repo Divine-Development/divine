@@ -1,12 +1,12 @@
-import os
-import json
-import asyncio
-import sys
-import requests
-import pathlib
-from dotenv import load_dotenv
 import discord
 from discord.ext import commands, tasks
+import json
+import os
+from dotenv import load_dotenv
+import pathlib
+import asyncio
+import requests
+import sys
 
 # Directories for guild settings and staff data
 SETTINGS_DIR = "database/guilds/"
@@ -14,7 +14,8 @@ STAFF_FILE = "database/data.json"
 GITHUB_REPO = "Divine-Development/divine"
 
 # Ensure the guilds directory exists
-os.makedirs(SETTINGS_DIR, exist_ok=True)
+if not os.path.exists(SETTINGS_DIR):
+    os.makedirs(SETTINGS_DIR)
 
 # Ensure the staff file exists, or create it with an empty list
 if not os.path.exists(STAFF_FILE):
@@ -27,18 +28,25 @@ def load_guild_settings(guild_id):
     if os.path.exists(file_path):
         with open(file_path, 'r') as f:
             return json.load(f)
-    return {
-        "welcome_channel": None,
-        "admin_role": None,
-        "suggestion_channel": None,
-        "verified": None
-    }
+    else:
+        return {
+            "welcome_channel": None,
+            "admin_role": None,
+            "suggestion_channel": None,
+            "verified": None
+        }
 
 # Function to save settings for a specific guild
 def save_guild_settings(guild_id, settings):
     file_path = f"{SETTINGS_DIR}{guild_id}.json"
     with open(file_path, 'w') as f:
         json.dump(settings, f, indent=4)
+
+# Function to update guild settings
+def update_guild_settings(guild_id, key, value):
+    settings = load_guild_settings(guild_id)
+    settings[key] = value  # Update the specific setting
+    save_guild_settings(guild_id, settings)  # Save the updated settings back to the file
 
 # Function to load staff data
 def load_staff_data():
@@ -50,18 +58,23 @@ def save_staff_data(staff_data):
     with open(STAFF_FILE, 'w') as f:
         json.dump(staff_data, f, indent=4)
 
+# Function to get guild data
+def get_guild_data(guild_id):
+    return load_guild_settings(guild_id)
+
+def get_staff_data():
+    return load_staff_data()
+
 # Create the bot
 intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-# Load environment variables
 env_path = pathlib.Path('database/.env')
 load_dotenv(dotenv_path=env_path)
 
-# GitHub Token
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
-last_commit_sha = None  # Initialize the last commit SHA
+last_commit_sha = None  # Initialize the variable for tracking the last commit SHA
 
 @tasks.loop(seconds=60)
 async def check_github_updates():
@@ -95,14 +108,14 @@ async def on_ready():
     print(f"Bot is online and logged in as {bot.user.name}")
     update_staff_list.start()  # Start the periodic staff update
     check_github_updates.start()  # Start checking for GitHub updates
-    await bot.remove_command('help')  # Remove the default help command
+    bot.remove_command('help')  # Remove the default help command
 
 # Load help data from JSON
 with open("help.json", "r") as f:
     help_data = json.load(f)
 
 # Custom Help Command
-@bot.command()
+@bot.command(name='help')
 async def help(ctx):
     embed = discord.Embed(
         title=help_data["title"],
@@ -132,53 +145,61 @@ async def update_staff_list():
     staff_members = staff_data.get("staff", [])
     print(f"Updated staff members: {staff_members}")
 
+# Function to check if a user is a staff member
+def is_staff(user_id):
+    return user_id in staff_members
+
 # Command to add a staff member (Bot owner only)
 @bot.command()
 @commands.is_owner()
 async def addstaff(ctx, user: str):
     staff_data = load_staff_data()
-    
-    # Try to get user by ID or username
-    if user.isdigit():
+
+    # Determine if the input is a user ID or a username
+    if user.isdigit():  # If input is a number, treat it as a user ID
         user_id = int(user)
-        user_to_add = ctx.guild.get_member(user_id)
-    else:
-        user_to_add = discord.utils.get(ctx.guild.members, name=user)
+        user_obj = ctx.guild.get_member(user_id)
+        if user_obj is None:
+            await ctx.send("User not found in this guild.")
+            return
+    else:  # Otherwise, treat it as a username
+        user_obj = discord.utils.get(ctx.guild.members, name=user)
+        if user_obj is None:
+            await ctx.send("User not found in this guild.")
+            return
 
-    if user_to_add is None:
-        await ctx.send("User not found. Please provide a valid user ID or username.")
-        return
-
-    if user_to_add.id not in staff_data['staff']:
-        staff_data['staff'].append(user_to_add.id)
+    if user_obj.id not in staff_data['staff']:
+        staff_data['staff'].append(user_obj.id)
         save_staff_data(staff_data)
-        await ctx.send(f"Added {user_to_add.name} to the staff list.")
+        await ctx.send(f"Added {user_obj.name} to the staff list.")
     else:
-        await ctx.send(f"{user_to_add.name} is already a staff member.")
+        await ctx.send(f"{user_obj.name} is already a staff member.")
 
 # Command to remove a staff member (Bot owner only)
 @bot.command()
 @commands.is_owner()
 async def removestaff(ctx, user: str):
     staff_data = load_staff_data()
-    
-    # Try to get user by ID or username
-    if user.isdigit():
+
+    # Determine if the input is a user ID or a username
+    if user.isdigit():  # If input is a number, treat it as a user ID
         user_id = int(user)
-        user_to_remove = ctx.guild.get_member(user_id)
-    else:
-        user_to_remove = discord.utils.get(ctx.guild.members, name=user)
+        user_obj = ctx.guild.get_member(user_id)
+        if user_obj is None:
+            await ctx.send("User not found in this guild.")
+            return
+    else:  # Otherwise, treat it as a username
+        user_obj = discord.utils.get(ctx.guild.members, name=user)
+        if user_obj is None:
+            await ctx.send("User not found in this guild.")
+            return
 
-    if user_to_remove is None:
-        await ctx.send("User not found. Please provide a valid user ID or username.")
-        return
-
-    if user_to_remove.id in staff_data['staff']:
-        staff_data['staff'].remove(user_to_remove.id)
+    if user_obj.id in staff_data['staff']:
+        staff_data['staff'].remove(user_obj.id)
         save_staff_data(staff_data)
-        await ctx.send(f"Removed {user_to_remove.name} from the staff list.")
+        await ctx.send(f"Removed {user_obj.name} from the staff list.")
     else:
-        await ctx.send(f"{user_to_remove.name} is not a staff member.")
+        await ctx.send(f"{user_obj.name} is not a staff member.")
 
 # Command to force update the staff list immediately (Bot owner only)
 @bot.command()
@@ -191,22 +212,21 @@ async def forcestaffupdate(ctx):
 
 @bot.command()
 async def setup(ctx, system: str, value: str):
-    # Check for administrator permission or guild's admin role
-    settings = load_guild_settings(ctx.guild.id)
-    admin_role_id = settings.get("admin_role")
-    admin_role = ctx.guild.get_role(admin_role_id)
-
-    if not ctx.author.guild_permissions.administrator and (admin_role is None or admin_role not in ctx.author.roles):
-        await ctx.send("You do not have permission to run this command.")
-        return
-
-    if not value:
-        await ctx.send("Please provide a value for the setup command.")
-        return
-
     guild_id = ctx.guild.id
     settings = load_guild_settings(guild_id)
     
+    # Check if the user has administrator permissions or the guild's admin role
+    admin_role_id = settings.get("admin_role")
+    has_permission = ctx.author.guild_permissions.administrator or (admin_role_id and discord.utils.get(ctx.guild.roles, id=admin_role_id) in ctx.author.roles)
+
+    if not has_permission:
+        await ctx.send("You do not have permission to set this up.")
+        return
+
+    if not value:
+        await ctx.send("You must provide a value for the setup command.")
+        return
+
     if system == "welcomer":
         try:
             channel = await commands.TextChannelConverter().convert(ctx, value)
@@ -230,60 +250,12 @@ async def setup(ctx, system: str, value: str):
             await ctx.send(f"Suggestion channel has been set to {channel.mention}")
         except commands.BadArgument:
             await ctx.send("Invalid channel. Please mention a valid text channel.")
+
     else:
-        await ctx.send("Invalid system. Available systems are: `welcomer`, `adminrole`, `suggestions`.")
-    
+        await ctx.send("Invalid system. Use 'welcomer', 'adminrole', or 'suggestions'.")
+
     save_guild_settings(guild_id, settings)
 
-# Command to submit a suggestion
-@bot.command()
-async def suggest(ctx, *, suggestion: str):
-    guild_id = ctx.guild.id
-    settings = load_guild_settings(guild_id)
-    suggestion_channel_id = settings.get("suggestion_channel")
-
-    if suggestion_channel_id:
-        suggestion_channel = ctx.guild.get_channel(suggestion_channel_id)
-        if suggestion_channel:
-            await suggestion_channel.send(f"New suggestion from {ctx.author.mention}: {suggestion}")
-            await ctx.send("Your suggestion has been submitted.")
-        else:
-            await ctx.send("Suggestion channel not found.")
-    else:
-        await ctx.send("No suggestion channel has been set.")
-
-# Command to view settings
-@bot.command()
-async def viewsettings(ctx):
-    settings = load_guild_settings(ctx.guild.id)
-    welcome_channel = f"<#{settings['welcome_channel']}>" if settings["welcome_channel"] else "Not set"
-    admin_role = f"<@&{settings['admin_role']}>" if settings["admin_role"] else "Not set"
-
-    embed = discord.Embed(title=f"Settings for {ctx.guild.name}", color=discord.Color.blue())
-    embed.add_field(name="Welcome Channel", value=welcome_channel, inline=False)
-    embed.add_field(name="Admin Role", value=admin_role, inline=False)
-    await ctx.send(embed=embed)
-
-# Command to reload all guild JSON files and update a progress message (Bot owner only)
-@bot.command()
-@commands.is_owner()
-async def reloadguilds(ctx):
-    guild_files = os.listdir(SETTINGS_DIR)
-    total_guilds = len(guild_files)
-    if total_guilds == 0:
-        await ctx.send("No guild settings found to reload.")
-        return
-
-    message = await ctx.send(f"Reloading guild settings... 0/{total_guilds}")
-    
-    for index, guild_file in enumerate(guild_files):
-        guild_id = os.path.splitext(guild_file)[0]  # Extract the guild ID from the file name
-        load_guild_settings(guild_id)  # Load settings (this is just for demonstration)
-        await message.edit(content=f"Reloading guild settings... {index + 1}/{total_guilds}")
-        await asyncio.sleep(1)  # Adding a delay to show progress
-
-    await message.edit(content="All guild settings reloaded.")
-
-# Start the bot
+# Start the bot with your token
 TOKEN = os.getenv("TOKEN")
 bot.run(TOKEN)
