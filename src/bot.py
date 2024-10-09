@@ -341,6 +341,8 @@ async def on_ready():
     # Start the periodic staff update
     update_staff_list.start()
     
+    update_vip_list.start()
+    
     # Start checking for GitHub updates
     check_github_updates.start()
 
@@ -535,7 +537,6 @@ vips = []
 async def update_vip_list():
     global vips
     vips = load_vip_data()
-    vip = vips.get("vips", [])
 
 # Function to check if a user is a staff member
 def is_vip(user_id):
@@ -546,6 +547,9 @@ def is_vip(user_id):
 @commands.is_owner()
 async def addvip(ctx, user: discord.User):
     vip_data = load_vip_data()
+
+    if 'vips' not in vip_data:
+        vip_data['vips'] = []
 
     if user.id not in vip_data['vips']:
         vip_data['vips'].append(user.id)
@@ -559,6 +563,9 @@ async def addvip(ctx, user: discord.User):
 @commands.is_owner()
 async def removevip(ctx, user: str):
     vip_data = load_vip_data()
+
+    if 'vips' not in vip_data:
+        vip_data['vips'] = []
 
     # Determine if the input is a user ID or a username
     if user.isdigit():  # If input is a number, treat it as a user ID
