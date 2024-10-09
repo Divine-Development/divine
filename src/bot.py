@@ -558,9 +558,9 @@ async def addvip(ctx, user: discord.User = None):
             vip_data['vips'] = []
         vip_data['vips'].append(user.id)
         save_vip_data(vip_data)
-        await ctx.send(f"Added {user.name} to the VIP list.")
+        await ctx.send(f"Added {user.name} (ID: {user.id}) to the VIP list.")
     else:
-        await ctx.send(f"{user.name} is already a VIP member.")
+        await ctx.send(f"{user.name} (ID: {user.id}) is already a VIP member.")
 
 # Command to remove a VIP member (Bot owner only)
 @bot.command(description="Remove a VIP member from the Database. (Owner only)")
@@ -575,9 +575,9 @@ async def removevip(ctx, user: discord.User = None):
     if user.id in vip_data.get('vips', []):
         vip_data['vips'].remove(user.id)
         save_vip_data(vip_data)
-        await ctx.send(f"Removed {user.name} from the VIP list.")
+        await ctx.send(f"Removed {user.name} (ID: {user.id}) from the VIP list.")
     else:
-        await ctx.send(f"{user.name} is not a VIP member.")
+        await ctx.send(f"{user.name} (ID: {user.id}) is not a VIP member.")
 
 # Function to check if a user is a staff member
 def is_staff(user_id):
@@ -596,9 +596,9 @@ async def addstaff(ctx, user: discord.User = None):
     if user.id not in staff_data['staff']:
         staff_data['staff'].append(user.id)
         save_staff_data(staff_data)
-        await ctx.send(f"Added {user.name} to the staff list.")
+        await ctx.send(f"Added {user.name} (ID: {user.id}) to the staff list.")
     else:
-        await ctx.send(f"{user.name} is already a staff member.")
+        await ctx.send(f"{user.name} (ID: {user.id}) is already a staff member.")
 
 # Command to remove a staff member (Bot owner only)
 @bot.command(description="Remove a staff member from the Database. (Owner only)")
@@ -613,9 +613,9 @@ async def removestaff(ctx, user: discord.User = None):
     if user.id in staff_data['staff']:
         staff_data['staff'].remove(user.id)
         save_staff_data(staff_data)
-        await ctx.send(f"Removed {user.name} from the staff list.")
+        await ctx.send(f"Removed {user.name} (ID: {user.id}) from the staff list.")
     else:
-        await ctx.send(f"{user.name} is not a staff member.")
+        await ctx.send(f"{user.name} (ID: {user.id}) is not a staff member.")
 
 @bot.command(description="Check my ping!")
 async def ping(ctx):
