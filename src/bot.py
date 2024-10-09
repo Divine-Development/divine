@@ -119,6 +119,25 @@ async def change_status():
     current_activity = activities[change_status.current_loop % len(activities)]
     await bot.change_presence(activity=current_activity)
 
+@bot.command(description="Owner only command!")
+@commands.is_owner()  # Ensure only the bot owner can use this command
+async def servers(ctx):
+    embed = discord.Embed(title="Servers I'm In", color=discord.Color.blue())
+    
+    for guild in bot.guilds:
+        try:
+            # Create an invite that lasts for 1 hour (3600 seconds)
+            invite = await guild.text_channels[0].create_invite(max_age=3600)
+            embed.add_field(name=f"{guild.name} (ID: {guild.id})", 
+                            value=f"[Join]({invite.url})", 
+                            inline=False)
+        except discord.errors.Forbidden:
+            embed.add_field(name=f"{guild.name} (ID: {guild.id})", 
+                            value="No permission to create invite", 
+                            inline=False)
+    
+    await ctx.send(embed=embed)
+
 @bot.command(description="Check the github repository for updates! (Owner Only)")
 @commands.is_owner()  # Ensure only the bot owner can use this command
 async def checkupdate(ctx):
