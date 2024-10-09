@@ -77,7 +77,7 @@ load_dotenv(dotenv_path=env_path)
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 last_commit_sha = None  # Initialize the variable for tracking the last commit SHA
 
-@tasks.loop(seconds=60)
+@tasks.loop(seconds=10)
 async def check_github_updates():
     global last_commit_sha
     url = f"https://api.github.com/repos/{GITHUB_REPO}/commits"
@@ -119,6 +119,36 @@ async def change_status():
     # Change the bot's activity to the next one in the list
     current_activity = activities[change_status.current_loop % len(activities)]
     await bot.change_presence(activity=current_activity)
+
+@bot.command()
+@commands.is_owner()  # Ensure only the bot owner can use this command
+async def checkupdate(ctx):
+    global last_commit_sha
+    url = f"https://api.github.com/repos/{GITHUB_REPO}/commits"
+    
+    headers = {
+        "Authorization": f"token {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github.v3+json"
+    }
+
+    response = requests.get(url, headers=headers)
+
+    if response.status_code == 200:
+        commits = response.json()
+        if commits:
+            latest_commit = commits[0]['sha']
+            if last_commit_sha is None:
+                last_commit_sha = latest_commit  # Initialize on first run
+                await ctx.send("Initialized with the latest commit.")
+            elif latest_commit != last_commit_sha:
+                last_commit_sha = latest_commit  # Update the last known commit SHA
+                await ctx.send("New commit detected! Restarting the bot...")
+                await bot.close()  # Close the bot
+                os.execv(sys.executable, ['python'] + sys.argv)  # Restart the bot
+            else:
+                await ctx.send("No new commits detected.")
+    else:
+        await ctx.send(f"Failed to fetch commits: {response.status_code} - {response.text}")
 
 # Bot startup event to initialize the staff member reloading task and status updates
 @bot.event
