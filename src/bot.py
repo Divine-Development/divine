@@ -664,7 +664,7 @@ async def reload(ctx, option: str):
         global vips
         data = load_staff_data()
         vip_data = data.get("vips", [])
-        await ctx.send(f"Staff list has been force-updated. Current staff: {len(vip_data)} members.")
+        await ctx.send(f"VIP list has been force-updated. Current VIP count: {len(vip_data)} members.")
     else:
         await ctx.send("Invalid option. Use '!reload staff', '!reload guilds' or '!reload vips'.")
 
