@@ -151,7 +151,7 @@ async def checkupdate(ctx):
 async def update_docs():
     # GitHub repository details
     GITHUB_REPO = "divine-development/divine"
-    file_path = "website/index.html"
+    file_path = "commands/index.html"
     branch = "main"
 
     # GitHub personal access token
