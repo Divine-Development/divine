@@ -545,11 +545,11 @@ def is_vip(user_id):
 @bot.command(description="Grant someone VIP (Owner only)")
 @commands.is_owner()
 async def addvip(ctx, user: discord.User):
-    vips = load_vip_data()
+    vip_data = load_vip_data()
 
-    if user.id not in vips['vips']:
-        vips['vips'].append(user.id)
-        save_vip_data(vips)
+    if user.id not in vip_data['vips']:
+        vip_data['vips'].append(user.id)
+        save_vip_data(vip_data)
         await ctx.send(f"Added {user.name} to the VIP list.")
     else:
         await ctx.send(f"{user.name} is already a VIP member.")
@@ -558,7 +558,7 @@ async def addvip(ctx, user: discord.User):
 @bot.command(description="Remove VIP from someone (Owner only)")
 @commands.is_owner()
 async def removevip(ctx, user: str):
-    vips = load_vip_data()
+    vip_data = load_vip_data()
 
     # Determine if the input is a user ID or a username
     if user.isdigit():  # If input is a number, treat it as a user ID
@@ -573,9 +573,9 @@ async def removevip(ctx, user: str):
             await ctx.send(f"Could not find a user named {user}")
             return
 
-    if user.id in vips['vips']:
-        vips['vips'].remove(user.id)
-        save_vip_data(vips)
+    if user.id in vip_data['vips']:
+        vip_data['vips'].remove(user.id)
+        save_vip_data(vip_data)
         await ctx.send(f"Removed {user.name} from the VIP list.")
     else:
         await ctx.send(f"{user.name} is not a VIP member.")
