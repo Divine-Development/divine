@@ -2,6 +2,8 @@ import discord
 from discord.ext import commands, tasks
 import json
 import os
+from dotenv import load_dotenv
+import pathlib
 import asyncio
 
 # Directories for guild settings and staff data
@@ -285,6 +287,12 @@ async def on_ready():
     print(f"Bot is online and logged in as {bot.user.name}")
     update_staff_list.start()  # Start the periodic staff update
 
-# Run the bot
-TOKEN = "MTI5MzExNDg4ODg2Mzg3OTI1MQ.GqJ5fJ.PLYVpSi9d3kTukeRhJfN7AncngaJf2uRJhDRlo"
+env_path = pathlib.Path('database/.env')
+
+# Load the .env file from that path
+load_dotenv(dotenv_path=env_path)
+
+# Access the TOKEN environment variable
+TOKEN = os.getenv('TOKEN')
+
 bot.run(TOKEN)
