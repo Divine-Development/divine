@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bot Commands</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .command {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .command h2 {
+            margin: 0;
+            color: #007BFF;
+        }
+        .command p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Bot Commands</h1>
+    <div id="commandsContainer"></div>
+
+    <script>
+        // Example list of commands
+        const commands = [
+            {
+                name: '!help',
+                description: 'Displays a list of available commands.'
+            },
+            {
+                name: '!addstaff <user>',
+                description: 'Adds a user to the staff list (Bot owner only).'
+            },
+            {
+                name: '!removestaff <user>',
+                description: 'Removes a user from the staff list (Bot owner only).'
+            },
+            {
+                name: '!setup <system> <value>',
+                description: 'Sets up server settings (Admin only).'
+            },
+            {
+                name: '!suggest <suggestion>',
+                description: 'Submits a suggestion.'
+            },
+            {
+                name: '!checkupdate',
+                description: 'Manually checks for updates (Bot owner only).'
+            },
+            // Add more commands here
+        ];
+
+        // Function to display commands
+        function displayCommands() {
+            const container = document.getElementById('commandsContainer');
+            commands.forEach(command => {
+                const commandDiv = document.createElement('div');
+                commandDiv.className = 'command';
+                commandDiv.innerHTML = `<h2>${command.name}</h2><p>${command.description}</p>`;
+                container.appendChild(commandDiv);
+            });
+        }
+
+        // Run the display function on page load
+        window.onload = displayCommands;
+    </script>
+</body>
+</html>

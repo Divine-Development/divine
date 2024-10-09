@@ -104,16 +104,13 @@ async def check_github_updates():
         print(f"Failed to fetch commits: {response.status_code} - {response.text}")
 
 # Set up the status loop
-@tasks.loop(seconds=15)
+@tasks.loop(seconds=20)
 async def change_status():
     server_count = len(bot.guilds)  # Get the number of guilds the bot is in
 
     # Create the activities based on the status messages
     activities = [
-        discord.Game("With commands!"),
-        discord.Activity(type=discord.ActivityType.watching, name=f"{server_count} guilds!"),
-        discord.Activity(type=discord.ActivityType.listening, name="Commands"),
-        discord.Streaming(name="Streaming Minecraft", url="https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+        discord.Activity(type=discord.ActivityType.watching, name=f"{server_count} guilds! || !help")
     ]
 
     # Change the bot's activity to the next one in the list
