@@ -661,8 +661,13 @@ async def reload(ctx, option: str):
             await asyncio.sleep(1)  # Adding a delay to show progress
         
         await message.edit(content="All guild settings reloaded.")
+    elif option.lower() == "vips":
+        global vips
+        vip_data = load_staff_data()
+        vip_data = vips.get("vips", [])
+        await ctx.send(f"Staff list has been force-updated. Current staff: {len(vip_data)} members.")
     else:
-        await ctx.send("Invalid option. Use '!reload staff' or '!reload guilds'.")
+        await ctx.send("Invalid option. Use '!reload staff', '!reload guilds' or '!reload vips'.")
 
 @bot.command(description="Setup the bot for your server. (Administrator permissions required or Admin role after being set-up via the setup command!)")
 async def setup(ctx, system: str = None, *, value: str = None):
