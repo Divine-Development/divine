@@ -110,7 +110,7 @@ async def change_status():
 
     # Create the activities based on the status messages
     activities = [
-        discord.Game("Playing With commands!"),
+        discord.Game("With commands!"),
         discord.Activity(type=discord.ActivityType.watching, name=f"{server_count} guilds!"),
         discord.Activity(type=discord.ActivityType.listening, name="Commands"),
         discord.Streaming(name="Streaming Minecraft", url="https://www.youtube.com/watch?v=dQw4w9WgXcQ")
