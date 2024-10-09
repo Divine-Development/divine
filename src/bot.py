@@ -72,15 +72,17 @@ def get_guild_data(guild_id):
 def get_staff_data():
     return load_staff_data()
 
-# Function to load staff data
+# Function to load VIP data from a JSON file
 def load_vip_data():
-    with open(DATA_DIR, 'r') as e:
-        return json.load(e)
+    if not os.path.exists(DATA_DIR):
+        return {"vips": []}  # Return an empty list if the file doesn't exist
+    with open(DATA_DIR, 'r') as f:
+        return json.load(f)
 
-# Function to save staff data
-def save_vip_data(DATA_DIR):
-    with open(DATA_DIR, 'w') as e:
-        json.dump(DATA_DIR, e, indent=4)
+# Function to save VIP data to a JSON file
+def save_vip_data(data):
+    with open(DATA_DIR, 'w') as f:
+        json.dump(data, f, indent=4)
 
 def get_vip_data():
     return load_vip_data()
