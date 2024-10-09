@@ -207,7 +207,7 @@ async def on_ready():
 
             # Notify the bot owner and the user who submitted the appeal
             bot_owner = await bot.fetch_user(898255050592366642)  # Replace with your actual bot owner ID
-            await appeal_channel.send(f"{bot_owner.mention}, {modal_interaction.user.mention}, here is the appeal:", embed=appeal_details_embed)
+            await appeal_channel.send(f"{bot_owner.mention}, {modal_interaction.user.mention}, here is the appeal:", embed=appeal_details_embed, view2=view2)
 
             # Save the appeal channel ID
             save_appeal(appeal_channel.id, modal_interaction.user.id)
@@ -252,7 +252,9 @@ async def on_ready():
     # Create a view and add the buttons to it
     view = discord.ui.View()
     view.add_item(appeal_button)
-    view.add_item(close_button)
+    view2 = discord.ui.View()
+    view2.add_item(close_button)
+    
 
     # Send the appeal panel to a specific channel
     channel = bot.get_channel(1293591350524121172)  # Replace with the ID of the channel you want to send the appeal panel to
