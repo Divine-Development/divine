@@ -69,6 +69,35 @@ intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
+env_path = pathlib.Path('database/.env')
+load_dotenv(dotenv_path=env_path)
+
+# Bot startup event to initialize the staff member reloading task
+@bot.event
+async def on_ready():
+    print(f"Bot is online and logged in as {bot.user.name}")
+    update_staff_list.start()  # Start the periodic staff update
+    check_github_updates.start()  # Start checking for GitHub updates
+    bot.remove_command(help)  # Remove the default help command
+
+# Define your custom help command here
+@bot.command()
+async def help(ctx):
+    embed = discord.Embed(
+        title=help_data["title"],
+        description=help_data["description"],
+        color=discord.Color.blue()
+    )
+    embed.add_field(name=help_data["field1-name"], value=help_data["field1"], inline=False)
+    button = discord.ui.Button(
+        label=help_data["button-text"], 
+        url=help_data["button-link"], 
+        emoji=help_data["button-emoji"]
+    )
+    view = discord.ui.View()
+    view.add_item(button)
+    await ctx.send(embed=embed, view=view)
+
 # A global variable to store staff list, to be updated periodically
 staff_members = []
 
@@ -267,17 +296,6 @@ async def on_member_join(member):
             print(f"Bot doesn't have permission to send messages in the welcome channel for guild {guild_id}")
         except Exception as e:
             print(f"Error sending welcome message in guild {guild_id}: {str(e)}")
-
-# Bot startup event to initialize the staff member reloading task
-@bot.event
-async def on_ready():
-    print(f"Bot is online and logged in as {bot.user.name}")
-    update_staff_list.start()  # Start the periodic staff update
-    check_github_updates.start()  # Start checking for GitHub updates
-    bot.remove_command(help)
-
-env_path = pathlib.Path('database/.env')
-load_dotenv(dotenv_path=env_path)
 
 # Access the TOKEN environment variable
 TOKEN = os.getenv('TOKEN')
