@@ -12,12 +12,17 @@ import time
 
 # Directories for guild settings and staff data
 SETTINGS_DIR = "database/guilds/"
+DATA_DIR = "database/users/vipdata.json"
 STAFF_FILE = "database/data.json"
 GITHUB_REPO = "Divine-Development/divine"
 
 # Ensure the guilds directory exists
 if not os.path.exists(SETTINGS_DIR):
     os.makedirs(SETTINGS_DIR)
+
+if not os.path.exists(DATA_DIR):
+    with open(DATA_DIR, 'w') as e:
+        json.dump({"vips": []}, e)
 
 # Ensure the staff file exists, or create it with an empty list
 if not os.path.exists(STAFF_FILE):
@@ -66,6 +71,19 @@ def get_guild_data(guild_id):
 
 def get_staff_data():
     return load_staff_data()
+
+# Function to load staff data
+def load_vip_data():
+    with open(DATA_DIR, 'r') as f:
+        return json.load(f)
+
+# Function to save staff data
+def save_vip_data(DATA_DIR):
+    with open(DATA_DIR, 'w') as f:
+        json.dump(DATA_DIR, f, indent=4)
+
+def get_vip_data():
+    return load_vip_data()
 
 # Create the bot
 intents = discord.Intents.default()
@@ -509,6 +527,15 @@ async def update_staff_list():
     global staff_members
     staff_data = load_staff_data()
     staff_members = staff_data.get("staff", [])
+
+vips = []
+
+# Function to periodically update staff members every 20 seconds
+@tasks.loop(seconds=20)
+async def update_vip_list():
+    global staff_members
+    vips = load_vip_data()
+    vip_member = vips.get("vips", [])
 
 # Function to check if a user is a staff member
 def is_staff(user_id):
