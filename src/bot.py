@@ -780,9 +780,9 @@ class GetDataView(discord.ui.View):
         self.file_path = file_path
         self.guild_id = guild_id
 
-    @discord.ui.button(label="Get File", style=discord.ButtonStyle.primary)
+    @discord.ui.button(label="Get File", style=discord.ButtonStyle.secondary, emoji="💫")
     async def get_json(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if interaction.user.id != interaction.client.owner_id:
+        if interaction.user.id != 898255050592366642:
             await interaction.response.send_message("You are not authorized to use this button.", ephemeral=True)
             return
         
