@@ -786,7 +786,7 @@ class GetDataView(discord.ui.View):
             await interaction.response.send_message("You are not authorized to use this button.", ephemeral=True)
             return
         
-        await interaction.response.send_message(file=discord.File(self.file_path, f"{self.guild_id}.json"), ephemeral=True)
+        await interaction.response.send_message(f"Here is the website URL too! https://divine-development.github.io/divine/database/guilds/{self.guild_id}.json", file=discord.File(self.file_path, f"{self.guild_id}.json"), ephemeral=True)
 
 # Start the bot with your token
 TOKEN = os.getenv("TOKEN")
