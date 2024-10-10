@@ -70,7 +70,7 @@
             if (enteredCode === secretCode) {
                 // If code is correct, set localStorage flag and redirect
                 localStorage.setItem('codeEntered', 'true');
-                window.location.href = "database/success.html"; // Change to your desired redirect URL
+                window.location.href = "success.html"; // Change to your desired redirect URL
             } else {
                 // If code is incorrect, display error message
                 document.getElementById('errorMessage').textContent = 'Incorrect code. Try again.';
