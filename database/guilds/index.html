@@ -1,0 +1,60 @@
+
+<?php
+// Define the password
+$password = "Divine028";
+
+// Check if the password is provided and correct
+if (!isset($_POST['password']) || $_POST['password'] !== $password) {
+    // If password is not provided or incorrect, show the login form
+    ?>
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Password Protected JSON Files</title>
+    </head>
+    <body>
+        <h1>Password Protected JSON Files</h1>
+        <form method="POST">
+            <label for="password">Enter Password:</label>
+            <input type="password" id="password" name="password" required>
+            <input type="submit" value="Submit">
+        </form>
+    </body>
+    </html>
+    <?php
+    exit();
+}
+
+// If the correct password is provided, list and provide links to JSON files
+$jsonFiles = glob("*.json");
+
+if (empty($jsonFiles)) {
+    echo "No JSON files found in this directory.";
+} else {
+    echo "<h1>JSON Files</h1>";
+    echo "<ul>";
+    foreach ($jsonFiles as $file) {
+        echo "<li><a href='view_json.php?file=" . urlencode($file) . "'>" . htmlspecialchars($file) . "</a></li>";
+    }
+    echo "</ul>";
+}
+
+// Create a separate PHP file named view_json.php to handle viewing individual JSON files
+file_put_contents("view_json.php", '<?php
+$password = "' . $password . '";
+if (!isset($_POST["password"]) || $_POST["password"] !== $password) {
+    header("Location: index.php");
+    exit();
+}
+if (isset($_GET["file"]) && preg_match("/^[a-zA-Z0-9_-]+\\.json$/", $_GET["file"])) {
+    $file = $_GET["file"];
+    $content = file_get_contents($file);
+    header("Content-Type: application/json");
+    echo $content;
+} else {
+    echo "Invalid file request.";
+}
+?>');
+?>
