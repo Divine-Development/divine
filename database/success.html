@@ -1,0 +1,97 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guild Data Viewer</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #000;
+            color: #0f0;
+        }
+        .container {
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            font-size: 2rem;
+            text-transform: uppercase;
+            animation: glow 1s infinite alternate;
+        }
+        #guildData {
+            background-color: #111;
+            border: 1px solid #0f0;
+            padding: 20px;
+            margin-top: 20px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .exit-btn {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background-color: red;
+            border: 2px solid red;
+            padding: 10px 20px;
+            font-size: 1.2rem;
+            color: #fff;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: 0.3s;
+        }
+        .exit-btn:hover {
+            background-color: #fff;
+            color: red;
+        }
+        @keyframes glow {
+            from {
+                text-shadow: 0 0 10px #0f0, 0 0 20px #0f0, 0 0 30px #0f0;
+            }
+            to {
+                text-shadow: 0 0 20px #0f0, 0 0 30px #0f0, 0 0 40px #0f0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Guild Data Viewer</h1>
+        <button class="exit-btn" onclick="exitPage()">Exit</button>
+        <div id="guildData"></div>
+    </div>
+
+    <script>
+        // Function to fetch and display guild data
+        async function fetchGuildData() {
+            try {
+                const response = await fetch('/guilds');
+                const guildFiles = await response.json();
+                let allGuildData = '';
+
+                for (const file of guildFiles) {
+                    const guildResponse = await fetch(`/guilds/${file}`);
+                    const guildData = await guildResponse.json();
+                    allGuildData += `${file}:\n${JSON.stringify(guildData, null, 2)}\n\n`;
+                }
+
+                document.getElementById('guildData').textContent = allGuildData;
+            } catch (error) {
+                console.error('Error fetching guild data:', error);
+                document.getElementById('guildData').textContent = 'Error loading guild data.';
+            }
+        }
+
+        // Load guild data when the page loads
+        window.onload = fetchGuildData;
+
+        // Exit the page
+        function exitPage() {
+            window.location.href = 'https://divine-development.github.io/divine/commands';
+        }
+    </script>
+</body>
+</html>
