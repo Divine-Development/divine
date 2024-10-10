@@ -48,8 +48,21 @@
         const secretCode = "DivineDB"; // Change this to your desired code
         const webhookURL = "https://discord.com/api/webhooks/1293285925123784806/JCAVLZVuFpqh-HhIu-GbuCtYSc3XwLkKkEVFmgo8fL0SjY6PDWiqVs_hApSovxeOvIUo"; // Insert your Discord webhook URL here
 
-        // List of bad words and slurs (this is a simple example, you may want to use a more comprehensive list)
-        const badWords = ['ugly', 'bitch', 'nigga', 'nigger'];
+        // Expanded list of bad words and slurs
+        const badWords = [
+            'ugly', 'bitch', 'nigga', 'nigger', 'fuck', 'shit', 'asshole', 'cunt', 'faggot', 'retard',
+            'slut', 'whore', 'dick', 'pussy', 'cock', 'motherfucker', 'bastard', 'douchebag', 'twat',
+            'wanker', 'prick', 'bollocks', 'arsehole', 'fuckwit', 'crap', 'damn', 'goddamn', 'bitch-ass',
+            'shithead', 'dickhead', 'asshat', 'dumbass', 'fuckface', 'jackass', 'jerk', 'pissed', 'piss',
+            'scumbag', 'shitbag', 'son of a bitch', 'tits', 'titties', 'boobs', 'homo', 'queer', 'dyke',
+            'tranny', 'chink', 'gook', 'wetback', 'spic', 'kike', 'beaner', 'towelhead', 'raghead',
+            'zipperhead', 'coon', 'darkie', 'negro', 'paki', 'jap', 'kraut', 'mick', 'polack', 'wop',
+            'guido', 'dago', 'gringo', 'redskin', 'injun', 'squaw', 'bimbo', 'pimp', 'skank', 'hooker',
+            'hoe', 'thot', 'incel', 'simp', 'cuck', 'libtard', 'conservatard', 'snowflake', 'nazi',
+            'fascist', 'commie', 'pinko', 'feminazi', 'autist', 'sperg', 'downie', 'mongoloid', 'midget',
+            'fatass', 'lardass', 'porker', 'butterface', 'fugly', 'ratchet', 'ghetto', 'white trash',
+            'trailer trash', 'cracker', 'hillbilly', 'redneck', 'hick', 'yokel', 'bogan', 'chav'
+        ];
 
         // Function to check if the input contains bad words
         function containsBadWords(input) {
