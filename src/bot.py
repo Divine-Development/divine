@@ -764,14 +764,29 @@ async def viewsettings(ctx):
     await ctx.send(embed=embed)
 
 # Owner-only command to retrieve the JSON settings for a guild
-@bot.command(description="Get my ping!")
+@bot.command(description="Get a guild's Data (Owner only)")
 @commands.is_owner()
 async def data(ctx, guild_id: int):
     file_path = f"{SETTINGS_DIR}{guild_id}.json"
     if os.path.exists(file_path):
-        await ctx.send(file=discord.File(file_path, f"{guild_id}.json"))
+        view = GetDataView(file_path, guild_id)
+        await ctx.send("Click the button to receive the JSON file:", view=view, ephemeral=True)
     else:
-        await ctx.send(f"No settings file found for guild ID {guild_id}")
+        await ctx.send(f"No settings file found for guild ID {guild_id}", ephemeral=True)
+
+class GetDataView(discord.ui.View):
+    def __init__(self, file_path, guild_id):
+        super().__init__()
+        self.file_path = file_path
+        self.guild_id = guild_id
+
+    @discord.ui.button(label="Get File", style=discord.ButtonStyle.primary)
+    async def get_json(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user.id != interaction.client.owner_id:
+            await interaction.response.send_message("You are not authorized to use this button.", ephemeral=True)
+            return
+        
+        await interaction.response.send_message(file=discord.File(self.file_path, f"{self.guild_id}.json"), ephemeral=True)
 
 # Start the bot with your token
 TOKEN = os.getenv("TOKEN")
