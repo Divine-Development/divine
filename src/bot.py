@@ -385,11 +385,11 @@ async def on_ready():
 
             # Create a private channel for the appeal
             overwrites = {
-                interaction.guild.default_role: discord.PermissionOverwrite(read_messages=False),
-                interaction.guild.owner: discord.PermissionOverwrite(read_messages=True),
+                modal_interaction.guild.default_role: discord.PermissionOverwrite(read_messages=False),
+                modal_interaction.guild.owner: discord.PermissionOverwrite(read_messages=True),
                 modal_interaction.user: discord.PermissionOverwrite(read_messages=True)
             }
-            appeal_channel = await interaction.guild.create_text_channel(f"appeal-{modal_interaction.user.name}", overwrites=overwrites)
+            appeal_channel = await modal_interaction.guild.create_text_channel(f"appeal-{modal_interaction.user.name}", overwrites=overwrites)
 
             # Send an embed to the new appeal channel
             appeal_details_embed = discord.Embed(
